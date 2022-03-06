@@ -1,4 +1,5 @@
 // ignore_for_file: prefer_typing_uninitialized_variables
+import 'dart:async';
 
 import 'package:TheMerchPerch/model/login_model.dart';
 import 'package:TheMerchPerch/screen/homepage.dart';
@@ -8,6 +9,9 @@ import 'package:TheMerchPerch/utils/shared_preference.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
+import 'package:shake/shake.dart';
+import 'package:flutter/foundation.dart' as foundation;
 
 class SignUp extends StatefulWidget {
   SignUp({Key? key}) : super(key: key);
@@ -17,6 +21,9 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
+  int _currentIndex = 0;
+  bool _isNear = false;
+  late StreamSubscription<dynamic> _streamSubscription;
   bool apiCallProcess = false;
   bool hidePassword = true;
   bool rehidePassword = true;
@@ -33,14 +40,57 @@ class _SignUpState extends State<SignUp> {
   }
 
   @override
+  void initState() {
+    // TODO: implement initState
+    listenSensor();
+    // Shake Sensor
+    ShakeDetector.autoStart(onPhoneShake: () {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(),
+          ));
+    });
+    super.initState();
+  }
+
+  Future<void> listenSensor() async {
+    FlutterError.onError = (FlutterErrorDetails details) {
+      if (foundation.kDebugMode) {
+        FlutterError.dumpErrorToConsole(details);
+      }
+    };
+    _streamSubscription = ProximitySensor.events.listen((int event) {
+      setState(() {
+        _isNear = (event > 0) ? true : false;
+      });
+      if (_isNear) {
+        // Constant.moveToNext(context, const LoginScreen());
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => LoginScreen(),
+            ));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _streamSubscription.cancel();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        height: 800,
+        height: 980,
         width: 450,
         decoration: const BoxDecoration(
           image: DecorationImage(
               image: AssetImage('assets/icons/bg1.jpg'), fit: BoxFit.cover),
+          color: Color.fromARGB(200, 11, 2, 63),
         ),
         child: Center(
           child: SingleChildScrollView(
@@ -55,39 +105,24 @@ class _SignUpState extends State<SignUp> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    Container(
-                      padding: EdgeInsets.all(35),
-                      decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 67, 75, 231),
-                          shape: BoxShape.circle),
-                      child: Column(
-                        children: [
-                          SizedBox(
-                              height: 70,
-                              width: 70,
-                              child: Image.asset(
-                                'assets/icons/user1.png',
-                                color: Colors.white,
-                              )),
-                          SizedBox(
-                            height: 5,
-                          ),
-                          const Text(
-                            "User Register",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                    Icon(
+                      Icons.account_circle_outlined,
+                      size: 100,
+                      color: Colors.indigo[900],
+                    ),
+                    _gap(),
+                    Text(
+                      "Registration",
+                      style: TextStyle(
+                        color: Colors.indigo[900],
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     _gap(),
                     _gap(),
                     TextFormField(
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
 
                       keyboardType: TextInputType.emailAddress,
                       // onSaved: (input) => email = input,
@@ -100,21 +135,34 @@ class _SignUpState extends State<SignUp> {
                       },
                       controller: name,
                       decoration: InputDecoration(
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors.indigo.shade900, width: 2.0),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          // width: 0.0 produces a thin "hairline" border
+                          borderSide:
+                              BorderSide(color: Colors.white, width: 1.0),
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.white, width: 1.0),
+                        ),
                         labelText: "Full Name ",
-                        labelStyle: TextStyle(color: Colors.white),
-                        hintStyle: TextStyle(color: Colors.white),
-                        // border: OutlineInputBorder(),
-                        prefixIcon: Icon(
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 58, 6, 247),
+                        ),
+                        hintStyle: const TextStyle(color: Colors.white),
+                        prefixIcon: const Icon(
                           Icons.account_circle_outlined,
-                          color: Color.fromARGB(255, 67, 75, 231),
+                          color: Color.fromARGB(255, 58, 6, 247),
                           // color: Colors.black54,
                         ),
                       ),
                     ),
                     _gap(),
                     TextFormField(
-                      style: TextStyle(color: Colors.white),
-
+                      style: const TextStyle(color: Colors.white),
                       keyboardType: TextInputType.emailAddress,
                       // onSaved: (input) => email = input,
                       validator: (input) {
@@ -126,20 +174,33 @@ class _SignUpState extends State<SignUp> {
                       },
                       controller: email,
                       decoration: InputDecoration(
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors.indigo.shade900, width: 2.0),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          // width: 0.0 produces a thin "hairline" border
+                          borderSide:
+                              BorderSide(color: Colors.white, width: 1.0),
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.white, width: 1.0),
+                        ),
                         labelText: "Email",
-                        labelStyle: TextStyle(color: Colors.white),
-                        hintStyle: TextStyle(color: Colors.white),
-                        // border: OutlineInputBorder(),
-                        prefixIcon: Icon(
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 58, 6, 247),
+                        ),
+                        hintStyle: const TextStyle(color: Colors.white),
+                        prefixIcon: const Icon(
                           Icons.phone,
-                          color: Color.fromARGB(255, 67, 75, 231),
-                          // color: Colors.black54,
+                          color: Color.fromARGB(255, 58, 6, 247),
                         ),
                       ),
                     ),
                     _gap(),
                     TextFormField(
-                      style: TextStyle(color: Colors.white),
+                      style: const TextStyle(color: Colors.white),
                       controller: password,
                       keyboardType: TextInputType.text,
                       validator: (input) {
@@ -152,14 +213,27 @@ class _SignUpState extends State<SignUp> {
                       },
                       obscureText: hidePassword,
                       decoration: InputDecoration(
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Colors.indigo.shade900, width: 2.0),
+                        ),
+                        enabledBorder: const OutlineInputBorder(
+                          // width: 0.0 produces a thin "hairline" border
+                          borderSide:
+                              BorderSide(color: Colors.white, width: 1.0),
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide:
+                              BorderSide(color: Colors.white, width: 1.0),
+                        ),
                         labelText: "Password ",
-                        labelStyle: TextStyle(color: Colors.white),
-                        hintStyle: TextStyle(color: Colors.white),
-                        // border: const OutlineInputBorder(),
-                        prefixIcon: Icon(
+                        labelStyle: const TextStyle(
+                          color: Color.fromARGB(255, 58, 6, 247),
+                        ),
+                        hintStyle: const TextStyle(color: Colors.white),
+                        prefixIcon: const Icon(
                           Icons.lock_outline,
-                          color: Color.fromARGB(255, 67, 75, 231),
-                          // color: Colors.black54,
+                          color: Color.fromARGB(255, 58, 6, 247),
                         ),
                         suffixIcon: IconButton(
                           onPressed: () {
@@ -181,7 +255,7 @@ class _SignUpState extends State<SignUp> {
                       padding: const EdgeInsets.symmetric(horizontal: 100),
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          primary: Color.fromARGB(255, 67, 75, 231),
+                          primary: Colors.indigo[800],
                           shape: const StadiumBorder(),
                           fixedSize:
                               const Size(double.maxFinite, double.infinity),
@@ -211,7 +285,7 @@ class _SignUpState extends State<SignUp> {
                                       fontSize: 20.0,
                                       timeInSecForIosWeb: 1,
                                       textColor: Colors.white,
-                                      backgroundColor: Colors.green[800],
+                                      backgroundColor: Colors.blue[800],
                                     ),
                                     Navigator.push(
                                       context,
@@ -263,20 +337,20 @@ class _SignUpState extends State<SignUp> {
                     RichText(
                       text: TextSpan(
                         style: const TextStyle(
-                          color: Color.fromARGB(255, 255, 255, 255),
+                          color: Color.fromARGB(255, 255, 254, 255),
                           fontSize: 13,
                         ),
                         children: [
                           const TextSpan(
                             text: "Already have an account? ",
-                            style: TextStyle(fontSize: 13),
+                            style: TextStyle(fontSize: 15),
                           ),
                           TextSpan(
                             text: "Login",
                             style: TextStyle(
-                                color: Color.fromARGB(255, 67, 75, 231),
+                                color: Color.fromARGB(255, 10, 41, 238),
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16),
+                                fontSize: 20),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () => Navigator.pop(context),
                           ),
